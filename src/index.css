@@ -24,3 +24,7 @@ button,
 input[type='submit'] {
   @apply rounded-lg bg-primary-500 px-4 py-2 text-white transition-colors hover:bg-primary-400;
 }
+
+dt {
+  @apply font-semibold;
+}

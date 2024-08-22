@@ -1,10 +1,20 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
+import { useSearchParams } from '../hooks/use-location';
 
 export const Search = () => {
-  const [value, setValue] = useState('');
+  const [search, setSearch] = useSearchParams('search');
+  const [value, setValue] = useState(search);
+
+  const handleSubmit = useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      setSearch(value);
+    },
+    [value, setSearch],
+  );
 
   return (
-    <form method="get" className="flex gap-2">
+    <form method="get" className="flex gap-2" onSubmit={handleSubmit}>
       <label htmlFor="search" className="sr-only">
         Search for a Movie
       </label>
