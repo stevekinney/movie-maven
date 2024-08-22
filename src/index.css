@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*,
+html,
+body {
+  @apply box-border;
+}
+
+input[type='text'],
+input[type='number'],
+input[type='email'],
+input[type='password'],
+input[type='date'],
+input[type='time'],
+input[type='search'],
+input[type='tel'],
+input[type='url'] {
+  @apply rounded-lg border-none bg-slate-200 px-4 py-2 placeholder-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-slate-500 focus:ring-opacity-50;
+}
+
+button,
+input[type='submit'] {
+  @apply rounded-lg bg-primary-500 px-4 py-2 text-white transition-colors hover:bg-primary-400;
+}
