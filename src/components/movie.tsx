@@ -5,6 +5,7 @@ import { Loading } from './loading';
 import { twMerge as merge } from 'tailwind-merge';
 import { Link } from './link';
 import { Image } from './image';
+import { useLocation } from '../hooks/use-location';
 
 /**
  * The search results component.
@@ -100,6 +101,12 @@ export const Movie = () => {
 };
 
 export default () => {
+  const { pathname } = useLocation();
+
+  if (pathname === '/') {
+    return null;
+  }
+
   return (
     <Suspense fallback={<Loading />}>
       <Movie />

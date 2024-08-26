@@ -3,6 +3,8 @@ import { isApiError, useSearch } from '../hooks/use-api';
 import { Link } from './link';
 import { EmptyState } from './empty-state';
 import { useLocation, usePathParams } from '../hooks/use-location';
+import { Suspense } from 'react';
+import { Loading } from './loading';
 
 type SearchResultProps = {
   movie: SearchResult;
@@ -38,19 +40,21 @@ export const SearchResults = () => {
   }
 
   return (
-    <div
-      className={merge(
-        'flex w-full flex-col gap-4 @container',
-        isPending && 'animate-pulse opacity-50',
-      )}
-    >
-      <Link to={`${pathname}?search=`} className="block w-fit place-self-end">
-        Clear Search
-      </Link>
-      {results.Search.map((movie: SearchResult) => (
-        <SearchResult key={movie.imdbID} movie={movie} />
-      ))}
-    </div>
+    <Suspense fallback={<Loading />}>
+      <div
+        className={merge(
+          'flex w-full flex-col gap-4 @container',
+          isPending && 'animate-pulse opacity-50',
+        )}
+      >
+        <Link to={`${pathname}?search=`} className="block w-fit place-self-end">
+          Clear Search
+        </Link>
+        {results.Search.map((movie: SearchResult) => (
+          <SearchResult key={movie.imdbID} movie={movie} />
+        ))}
+      </div>
+    </Suspense>
   );
 };
 

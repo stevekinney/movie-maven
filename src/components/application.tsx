@@ -13,8 +13,6 @@ const Application = () => {
       <div className="flex gap-4">
         <Suspense fallback={<Loading />}>
           <SearchResults />
-        </Suspense>
-        <Suspense fallback={<Loading />}>
           <Movie />
         </Suspense>
       </div>
