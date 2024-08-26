@@ -2,7 +2,9 @@ import { twMerge as merge } from 'tailwind-merge';
 import { isApiError, useSearch } from '../hooks/use-api';
 import { Link } from './link';
 import { EmptyState } from './empty-state';
-import { usePathParams } from '../hooks/use-location';
+import { useLocation, usePathParams } from '../hooks/use-location';
+import { Suspense } from 'react';
+import { Loading } from './loading';
 
 type SearchResultProps = {
   movie: SearchResult;
@@ -15,12 +17,7 @@ type SearchResultProps = {
  */
 export const SearchResults = () => {
   const [results, isPending] = useSearch();
-
-  console.log({ isPending });
-
-  if (results instanceof Promise) {
-    throw results;
-  }
+  const { pathname } = useLocation();
 
   if (isApiError(results)) {
     return (
@@ -38,21 +35,26 @@ export const SearchResults = () => {
     );
   }
 
-  if (results.length === 0) {
+  if (results.Search.length === 0) {
     return <EmptyState>No results found.</EmptyState>;
   }
 
   return (
-    <div
-      className={merge(
-        'flex w-full flex-col gap-4 @container',
-        isPending && 'animate-pulse opacity-50',
-      )}
-    >
-      {results.map((movie: SearchResult) => (
-        <SearchResult key={movie.imdbID} movie={movie} />
-      ))}
-    </div>
+    <Suspense fallback={<Loading />}>
+      <div
+        className={merge(
+          'flex w-full flex-col gap-4 @container',
+          isPending && 'animate-pulse opacity-50',
+        )}
+      >
+        <Link to={`${pathname}?search=`} className="block w-fit place-self-end">
+          Clear Search
+        </Link>
+        {results.Search.map((movie: SearchResult) => (
+          <SearchResult key={movie.imdbID} movie={movie} />
+        ))}
+      </div>
+    </Suspense>
   );
 };
 

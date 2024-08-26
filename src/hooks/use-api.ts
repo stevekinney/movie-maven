@@ -1,9 +1,14 @@
-import { useEffect, useState, useTransition } from 'react';
+import { useCallback } from 'react';
 import { usePathParams, useSearchParams } from './use-location';
+import { useSuspenseFetch } from './use-suspense-fetch';
 
 /** This can be set in `.env` */
 const apiKey: string = import.meta.env.VITE_API_KEY;
 const apiEndpoint = `https://www.omdbapi.com/?apikey=${apiKey}&type=movie`;
+
+if (!apiKey) {
+  throw new Error('VITE_API_KEY is not defined in the environment variables.');
+}
 
 /**
  * Checks if the given response is an API error.
@@ -14,42 +19,43 @@ export const isApiError = (response: unknown): response is APIError => {
   return (response as APIError)?.Response === 'False';
 };
 
+const fetchFromApi = async <T>(url: string): Promise<APIResponse<T>> => {
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch data from API.');
+    }
+
+    const data = await response.json();
+
+    if (isApiError(data)) {
+      return data;
+    }
+
+    return data;
+  } catch (error) {
+    if (import.meta.env.MODE === 'development') {
+      console.error('Error fetching from API.', error);
+    }
+    throw error;
+  }
+};
+
 /**
  * Returns a promise that fetches search results based on the given query.
  * @param query - The search query to fetch results for.
  */
 const fetchSearchResults = async (
-  query: string,
-): Promise<APIResponse<SearchResult[]>> => {
-  const response = await fetch(`${apiEndpoint}&s=${query}`);
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch search results.');
-  }
-
-  const data = await response.json();
-
-  if (isApiError(data)) {
-    return data;
-  }
-
-  return data.Search;
+  query?: string,
+): Promise<APIResponse<{ Search: SearchResult[] } | null>> => {
+  if (!query) return null;
+  return fetchFromApi(`${apiEndpoint}&s=${query}`);
 };
 
-const fetchMovie = async (id: string): Promise<APIResponse<Movie>> => {
-  const response = await fetch(`${apiEndpoint}&i=${id}`);
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch search results.');
-  }
-
-  const data = await response.json();
-
-  if (isApiError(data)) {
-    return data;
-  }
-
-  return data;
+const fetchMovie = async (id?: string): Promise<APIResponse<Movie> | null> => {
+  if (!id) return null;
+  return fetchFromApi<Movie>(`${apiEndpoint}&i=${id}`);
 };
 
 /**
@@ -61,27 +67,10 @@ const fetchMovie = async (id: string): Promise<APIResponse<Movie>> => {
  */
 export const useSearch = () => {
   const [search] = useSearchParams('search');
-  const [searchResults, setSearchResults] = useState<Eventual<
-    APIResponse<SearchResult[]>
-  > | null>(null);
 
-  const [isPending, startTransition] = useTransition();
+  const fetcher = useCallback(() => fetchSearchResults(search), [search]);
 
-  useEffect(() => {
-    if (search) {
-      startTransition(() => {
-        const api = fetchSearchResults(search);
-
-        setSearchResults(api);
-
-        api.then((results) => {
-          setSearchResults(results);
-        });
-      });
-    } else {
-      setSearchResults(null);
-    }
-  }, [search]);
+  const [searchResults, isPending] = useSuspenseFetch(fetcher);
 
   return [searchResults, isPending] as const;
 };
@@ -95,25 +84,10 @@ export const useSearch = () => {
  */
 export const useMovie = () => {
   const id = usePathParams('/:id', 'id');
-  const [movie, setMovie] = useState<Eventual<APIResponse<Movie>> | null>(null);
-  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    startTransition(() => {
-      if (!id) {
-        setMovie(null);
-        return;
-      }
+  const fetcher = useCallback(() => fetchMovie(id), [id]);
 
-      const api = fetchMovie(id);
-
-      setMovie(api);
-
-      api.then((movie) => {
-        setMovie(movie);
-      });
-    });
-  }, [id]);
+  const [movie, isPending] = useSuspenseFetch(fetcher);
 
   return [movie, isPending] as const;
 };
