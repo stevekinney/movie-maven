@@ -14,6 +14,29 @@ export const isApiError = (response: unknown): response is APIError => {
   return (response as APIError)?.Response === 'False';
 };
 
+const fetchFromApi = async <T>(url: string): Promise<APIResponse<T>> => {
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch data from API.');
+    }
+
+    const data = await response.json();
+
+    if (isApiError(data)) {
+      return data;
+    }
+
+    return data;
+  } catch (error) {
+    if (import.meta.env.MODE === 'development') {
+      console.error('Error fetching from API.', error);
+    }
+    throw error;
+  }
+};
+
 /**
  * Returns a promise that fetches search results based on the given query.
  * @param query - The search query to fetch results for.
@@ -21,35 +44,11 @@ export const isApiError = (response: unknown): response is APIError => {
 const fetchSearchResults = async (
   query: string,
 ): Promise<APIResponse<SearchResult[]>> => {
-  const response = await fetch(`${apiEndpoint}&s=${query}`);
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch search results.');
-  }
-
-  const data = await response.json();
-
-  if (isApiError(data)) {
-    return data;
-  }
-
-  return data.Search;
+  return fetchFromApi<SearchResult[]>(`${apiEndpoint}&s=${query}`);
 };
 
 const fetchMovie = async (id: string): Promise<APIResponse<Movie>> => {
-  const response = await fetch(`${apiEndpoint}&i=${id}`);
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch search results.');
-  }
-
-  const data = await response.json();
-
-  if (isApiError(data)) {
-    return data;
-  }
-
-  return data;
+  return fetchFromApi<Movie>(`${apiEndpoint}&i=${id}`);
 };
 
 /**
