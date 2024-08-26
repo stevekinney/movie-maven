@@ -1,9 +1,13 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from '../hooks/use-location';
 
 export const Search = () => {
   const [search, setSearch] = useSearchParams('search');
   const [value, setValue] = useState(search);
+
+  useEffect(() => {
+    setValue(search);
+  }, [search]);
 
   const handleSubmit = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {

@@ -2,7 +2,7 @@ import { twMerge as merge } from 'tailwind-merge';
 import { isApiError, useSearch } from '../hooks/use-api';
 import { Link } from './link';
 import { EmptyState } from './empty-state';
-import { usePathParams } from '../hooks/use-location';
+import { useLocation, usePathParams } from '../hooks/use-location';
 
 type SearchResultProps = {
   movie: SearchResult;
@@ -15,12 +15,7 @@ type SearchResultProps = {
  */
 export const SearchResults = () => {
   const [results, isPending] = useSearch();
-
-  console.log({ isPending });
-
-  if (results instanceof Promise) {
-    throw results;
-  }
+  const { pathname } = useLocation();
 
   if (isApiError(results)) {
     return (
@@ -38,7 +33,7 @@ export const SearchResults = () => {
     );
   }
 
-  if (results.length === 0) {
+  if (results.Search.length === 0) {
     return <EmptyState>No results found.</EmptyState>;
   }
 
@@ -49,7 +44,10 @@ export const SearchResults = () => {
         isPending && 'animate-pulse opacity-50',
       )}
     >
-      {results.map((movie: SearchResult) => (
+      <Link to={`${pathname}?search=`} className="block w-fit place-self-end">
+        Clear Search
+      </Link>
+      {results.Search.map((movie: SearchResult) => (
         <SearchResult key={movie.imdbID} movie={movie} />
       ))}
     </div>

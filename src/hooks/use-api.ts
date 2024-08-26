@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { usePathParams, useSearchParams } from './use-location';
 import { useSuspenseFetch } from './use-suspense-fetch';
 
@@ -46,12 +47,14 @@ const fetchFromApi = async <T>(url: string): Promise<APIResponse<T>> => {
  * @param query - The search query to fetch results for.
  */
 const fetchSearchResults = async (
-  query: string,
-): Promise<APIResponse<SearchResult[]>> => {
-  return fetchFromApi<SearchResult[]>(`${apiEndpoint}&s=${query}`);
+  query?: string,
+): Promise<APIResponse<{ Search: SearchResult[] } | null>> => {
+  if (!query) return null;
+  return fetchFromApi(`${apiEndpoint}&s=${query}`);
 };
 
-const fetchMovie = async (id: string): Promise<APIResponse<Movie>> => {
+const fetchMovie = async (id?: string): Promise<APIResponse<Movie> | null> => {
+  if (!id) return null;
   return fetchFromApi<Movie>(`${apiEndpoint}&i=${id}`);
 };
 
@@ -65,7 +68,7 @@ const fetchMovie = async (id: string): Promise<APIResponse<Movie>> => {
 export const useSearch = () => {
   const [search] = useSearchParams('search');
 
-  const fetcher = () => fetchSearchResults(search);
+  const fetcher = useCallback(() => fetchSearchResults(search), [search]);
 
   const [searchResults, isPending] = useSuspenseFetch(fetcher);
 
@@ -82,11 +85,7 @@ export const useSearch = () => {
 export const useMovie = () => {
   const id = usePathParams('/:id', 'id');
 
-  if (!id) {
-    return [null, false] as const;
-  }
-
-  const fetcher = () => fetchMovie(id);
+  const fetcher = useCallback(() => fetchMovie(id), [id]);
 
   const [movie, isPending] = useSuspenseFetch(fetcher);
 
