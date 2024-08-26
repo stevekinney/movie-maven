@@ -5,6 +5,10 @@ import { usePathParams, useSearchParams } from './use-location';
 const apiKey: string = import.meta.env.VITE_API_KEY;
 const apiEndpoint = `https://www.omdbapi.com/?apikey=${apiKey}&type=movie`;
 
+if (!apiKey) {
+  throw new Error('VITE_API_KEY is not defined in the environment variables.');
+}
+
 /**
  * Checks if the given response is an API error.
  * The OMDB API returns an error object when the request fails.
