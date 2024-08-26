@@ -1,5 +1,5 @@
-import { useEffect, useState, useTransition } from 'react';
 import { usePathParams, useSearchParams } from './use-location';
+import { useSuspenseFetch } from './use-suspense-fetch';
 
 /** This can be set in `.env` */
 const apiKey: string = import.meta.env.VITE_API_KEY;
@@ -64,27 +64,10 @@ const fetchMovie = async (id: string): Promise<APIResponse<Movie>> => {
  */
 export const useSearch = () => {
   const [search] = useSearchParams('search');
-  const [searchResults, setSearchResults] = useState<Eventual<
-    APIResponse<SearchResult[]>
-  > | null>(null);
 
-  const [isPending, startTransition] = useTransition();
+  const fetcher = () => fetchSearchResults(search);
 
-  useEffect(() => {
-    if (search) {
-      startTransition(() => {
-        const api = fetchSearchResults(search);
-
-        setSearchResults(api);
-
-        api.then((results) => {
-          setSearchResults(results);
-        });
-      });
-    } else {
-      setSearchResults(null);
-    }
-  }, [search]);
+  const [searchResults, isPending] = useSuspenseFetch(fetcher);
 
   return [searchResults, isPending] as const;
 };
@@ -98,25 +81,14 @@ export const useSearch = () => {
  */
 export const useMovie = () => {
   const id = usePathParams('/:id', 'id');
-  const [movie, setMovie] = useState<Eventual<APIResponse<Movie>> | null>(null);
-  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    startTransition(() => {
-      if (!id) {
-        setMovie(null);
-        return;
-      }
+  if (!id) {
+    return [null, false] as const;
+  }
 
-      const api = fetchMovie(id);
+  const fetcher = () => fetchMovie(id);
 
-      setMovie(api);
-
-      api.then((movie) => {
-        setMovie(movie);
-      });
-    });
-  }, [id]);
+  const [movie, isPending] = useSuspenseFetch(fetcher);
 
   return [movie, isPending] as const;
 };
