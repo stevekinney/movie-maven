@@ -31,10 +31,13 @@ export const Movie = () => {
   return (
     <div
       className={merge(
-        'w-full @container',
+        'flex w-full flex-col gap-4 @container',
         isPending && 'animate-pulse opacity-50',
       )}
     >
+      <Link to="/" className="block w-fit place-self-end">
+        Clear Movie
+      </Link>
       <article className="grid w-full grid-cols-1 gap-8 rounded-md bg-slate-100 p-4 text-sm @sm:grid-cols-2">
         <Image
           src={movie.Poster}
@@ -92,11 +95,6 @@ export const Movie = () => {
           </li>
         </ul>
       </article>
-      <div className="flex justify-end">
-        <Link to="/" className="mt-4 block w-fit text-end">
-          ← Back to Search
-        </Link>
-      </div>
     </div>
   );
 };
